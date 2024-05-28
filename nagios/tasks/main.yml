@@ -1,0 +1,114 @@
+- name: Install required packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - autoconf
+    - gcc
+    - libc6
+    - make
+    - wget
+    - apache2-utils
+    - gawk
+    - libmcrypt-dev
+    - libnet-snmp-perl
+    - snmp
+    - unzip
+    - curl
+    - openssl
+    - build-essential
+    - libgd-dev
+    - libssl-dev
+    - libapache2-mod-php
+    - php-gd
+    - php
+    - apache2
+
+- name: Create a Nagios directory
+  file:
+    path: /opt/nagios/
+    state: directory
+
+- name: Download Nagios
+  get_url:
+    url: https://assets.nagios.com/downloads/nagioscore/releases/nagios-4.4.6.tar.gz
+    dest: /opt/nagios/nagios.tar.gz
+
+- name: Unzip the Nagios package
+  unarchive:
+    src: /opt/nagios/nagios.tar.gz
+    dest: /opt/nagios/
+
+- name: Configure Nagios
+  command: "{{ item }}"
+  args:
+    chdir: /opt/nagios/nagios-4.4.6/
+  with_items:
+    - ./configure
+    - make all
+    - make install-groups-users
+    - usermod -a -G nagios www-data
+    - make install
+    - make install-init
+    - make install-commandmode
+    - make install-config
+    - make install-webconf
+    - a2enmod rewrite
+    - a2enmod cgi
+
+- name: configure ufw for apache
+  shell: ufw allow apache && ufw enable && ufw reload
+# - name: change apache port 
+#   ansible.builtin.replace:
+#       path: /etc/apache2/ports.conf
+#       regexp: '^Listen\s+80$'
+#       replace: 'Listen 81'
+  
+- name: Restart Apache
+  systemd:
+      name: apache2
+      state: reloaded
+- name: Create a Nagios user and set the password when prompted
+  shell: sudo htpasswd -c /usr/local/nagios/etc/htpasswd.users nagiosadmin
+
+- name: Download Nagios plugins
+  get_url:
+    url: https://nagios-plugins.org/download/nagios-plugins-2.3.3.tar.gz
+    dest: /opt/nagios/nagios-4.4.6/nagios-plugins.tar.gz
+
+- name: Extract Nagios plugins
+  unarchive:
+    src: /opt/nagios/nagios-4.4.6/nagios-plugins.tar.gz
+    dest: /opt/nagios/nagios-4.4.6/
+
+- name: Run Nagios plugins
+  command: "{{ item }}"
+  args:
+    chdir: /opt/nagios/nagios-4.4.6/nagios-plugins-2.3.3/
+  with_items:
+    - ./configure --with-nagios-user=nagios --with-nagios-group=nagios
+    - make
+    - make install
+
+- name: Start Nagios
+  systemd:
+    name: nagios
+    state: started
+    
+- name: configure nagios to monitor tomcat
+  copy:
+    src: tomcat.cfg
+    dest: /usr/local/nagios/etc/objects/tomcat.cfg
+
+
+- name: Add a line to the end of a file
+  lineinfile:
+     path: /usr/local/nagios/etc/nagios.cfg
+     line: "cfg_file=/usr/local/nagios/etc/objects/tomcat.cfg"
+     insertafter: EOF
+
+
+- name: restart nagios service
+  service:
+    name: nagios
+    state: restarted

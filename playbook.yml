@@ -1,0 +1,11 @@
+# - name: Create pet-clinic usr and install JDK 
+#   hosts: localhost
+#   roles:
+#      - pet-clinic
+- name: Configure tomcat and it's requirements
+  hosts: localhost
+  become_user: pet-clinic
+  roles:
+            # - tomcat-install
+            # - jenkins
+            - nagios

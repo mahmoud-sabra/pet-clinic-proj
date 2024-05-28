@@ -1,0 +1,11 @@
+---
+# tasks file for jenkins 
+
+- name: install jenkins war file
+  get_url:
+    url: https://get.jenkins.io/war/2.456/jenkins.war
+    dest: /home/pet-clinic
+- name: run jenkins 
+  command: nohup /home/pet-clinic/jdk-17.0.11/bin/java -jar /home/pet-clinic/jenkins.war --enable-future-java
+  async: 3600
+  poll: 0

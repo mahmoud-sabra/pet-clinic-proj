@@ -1,0 +1,16 @@
+---
+# tasks file for pet-clinic
+- name: Install Tomcat prerequisites with bash script
+  script: pet-clinic.sh
+
+- name: Ensure pet-clinic user exists
+  user:
+      name: pet-clinic
+      state: present
+
+- name: Add pet-clinic user to sudoers
+  lineinfile:
+        path: /etc/sudoers
+        line: 'pet-clinic ALL=(ALL) NOPASSWD: ALL'
+        create: yes
+

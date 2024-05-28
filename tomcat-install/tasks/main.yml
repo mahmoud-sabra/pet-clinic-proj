@@ -1,0 +1,35 @@
+---
+- name: Install Tomcat at pet-clinic user
+  get_url:
+            url: https://dlcdn.apache.org/tomcat/tomcat-10/v10.1.24/bin/apache-tomcat-10.1.24.tar.gz
+            dest: /home/pet-clinic/
+- name: Extract Tomcat tar file
+  unarchive:
+            src: /home/pet-clinic/apache-tomcat-10.1.24.tar.gz
+            dest: /home/pet-clinic/
+
+# - name: Add JAVA_HOME to .bashrc
+#   lineinfile:
+#             path: /home/pet-clinic/.bashrc
+#             line: 'export JAVA_HOME=/home/pet-clinic/jdk-17.0.11'
+#             create: yes
+#             mode: '0755'
+- name: configure tomcat to have access to its deployment manager
+  lineinfile:
+        path: /home/pet-clinic/apache-tomcat-10.1.24/conf/tomcat-users.xml 
+        insertbefore: '</tomcat-users>'
+        line: '<role rolename="manager-gui"/> <user username="tomcat" password="s3cret" roles="manager-gui"/>'
+    
+
+- name: make application running on port 9090
+  lineinfile:
+        path: /home/pet-clinic/apache-tomcat-10.1.24/conf/server.xml
+        regexp: '<Connector port="8080"'
+        line: '<Connector port="9090"'
+
+- name: shutdown tomcat
+  shell: /home/pet-clinic/apache-tomcat-10.1.24/bin/shutdown.sh
+
+
+- name: start tomcat
+  shell: /home/pet-clinic/apache-tomcat-10.1.24/bin/startup.sh
