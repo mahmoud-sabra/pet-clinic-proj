@@ -7,13 +7,7 @@
   unarchive:
             src: /home/pet-clinic/apache-tomcat-10.1.24.tar.gz
             dest: /home/pet-clinic/
-
-# - name: Add JAVA_HOME to .bashrc
-#   lineinfile:
-#             path: /home/pet-clinic/.bashrc
-#             line: 'export JAVA_HOME=/home/pet-clinic/jdk-17.0.11'
-#             create: yes
-#             mode: '0755'
+            remote_src: yes
 - name: configure tomcat to have access to its deployment manager
   lineinfile:
         path: /home/pet-clinic/apache-tomcat-10.1.24/conf/tomcat-users.xml 
@@ -26,10 +20,38 @@
         path: /home/pet-clinic/apache-tomcat-10.1.24/conf/server.xml
         regexp: '<Connector port="8080"'
         line: '<Connector port="9090"'
+- name: high availability of Tomcat server
+  script: 
+      - cp -avr /home/pet-clinic/apache-tomcat-10.1.24 /home/pet-clinic/instance1
+      - cp -avr /home/pet-clinic/apache-tomcat-10.1.24 /home/pet-clinic/instance2
 
-- name: shutdown tomcat
-  shell: /home/pet-clinic/apache-tomcat-10.1.24/bin/shutdown.sh
-
-
-- name: start tomcat
-  shell: /home/pet-clinic/apache-tomcat-10.1.24/bin/startup.sh
+- name: remove instance directories
+  script:
+      - rm -rf /home/pet-clinic/instance1/bin/
+      - rm -rf /home/pet-clinic/instance2/bin/
+      - rm -rf /home/pet-clinic/instance1/lib/
+      - rm -rf /home/pet-clinic/instance2/lib/
+- name: configure instance1 to run on port 9091
+  lineinfile:
+        path: /home/pet-clinic/instance1/conf/server.xml
+        regexp: '<Connector port="9090"'
+        line: '<Connector port="9091"'
+- name: configure instance2 to run on port 9092
+  lineinfile:
+        path: /home/pet-clinic/instance2/conf/server.xml
+        regexp: '<Connector port="9090"'
+        line: '<Connector port="9092"'
+- name: configure instance1 server port
+  lineinfile:
+        path: /home/pet-clinic/instance1/conf/server.xml
+        regexp: '<Server port="8005"'
+        line: '<Server port="8105"'
+- name: configure instance2 server port 
+  lineinfile:
+        path: /home/pet-clinic/instance2/conf/server.xml
+        regexp: '<Server port="8005"'
+        line: '<Server port="8205"'
+- name: start instance1
+  command: /home/pet-clinic/startup1.sh
+- name: start instance2 
+  command: /home/pet-clinic/startup2.sh
