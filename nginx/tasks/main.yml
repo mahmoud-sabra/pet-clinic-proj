@@ -1,0 +1,23 @@
+---
+# tasks file for nginx
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+    update_cache: yes
+  become: yes # Run as root
+- name: Copy nginx.conf
+  copy:
+    src: files/nginx.conf
+    dest: /etc/nginx/nginx.conf
+  become: yes
+- name: Copy default
+  copy:
+    src: files/default
+    dest: /etc/nginx/sites-available/default
+  become: yes
+- name: restart nginx
+  service:
+    name: nginx
+    state: restarted
+  become: yes
