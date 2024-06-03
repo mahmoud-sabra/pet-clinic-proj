@@ -89,7 +89,8 @@ add a username && password
 
 **then save and run!**
 
-![image](https://github.com/mahmoud-sabra/pet-clinic-proj/assets/52472369/d49fc0e8-43fa-4b61-a9c2-cd3447ba16ce)
+![image](https://github.com/mahmoud-sabra/pet-clinic-proj/assets/52472369/c3048a9e-f0fd-467c-a234-9fe46178f19c)
+
 
 
 6. **Configure Nagios to Monitor Tomcat Process:**
